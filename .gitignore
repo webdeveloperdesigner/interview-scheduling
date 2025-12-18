@@ -1,0 +1,13 @@
+# Node
+node_modules/
+npm-debug.log
+
+# Java / Spring Boot
+target/
+*.log
+
+# IDE
+.vscode/
+
+# OS
+.DS_Store

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Weekly Availability</title>
+<style>
+    /* ===== GLOBAL RESET ===== */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+        background-color: #f0f4f8;
+        color: #1f2937;
+        min-height: 100vh;
+        padding: 1rem;
+    }
+
+    h2, h3 {
+        color: #0b5ed7;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
+    /* ===== FORM CARD ===== */
+    .form-card {
+        background-color: white;
+        border-radius: 12px;
+        max-width: 600px;
+        margin: 1rem auto 2rem auto;
+        padding: 2rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .form-card label {
+        display: block;
+        margin-bottom: 1rem;
+        font-weight: bold;
+    }
+
+    .form-card input,
+    .form-card select {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 1rem;
+        margin-top: 0.3rem;
+    }
+
+    .form-card button {
+        display: block;
+        width: 100%;
+        margin-top: 1.5rem;
+        padding: 0.6rem;
+        background-color: #0b5ed7;
+        color: white;
+        font-weight: bold;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .form-card button:hover {
+        background-color: #084bb5;
+    }
+
+    /* ===== EXISTING AVAILABILITY CARDS ===== */
+    .availability-list {
+        max-width: 900px;
+        margin: 0 auto 3rem auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .availability-card {
+        background-color: white;
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .availability-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    .availability-info {
+        font-size: 1rem;
+    }
+
+    .availability-actions button {
+        margin-left: 0.5rem;
+        padding: 0.4rem 0.8rem;
+        background-color: #0b5ed7;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .availability-actions button:hover {
+        background-color: #084bb5;
+    }
+
+    @media(max-width: 600px) {
+        .availability-card {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .availability-actions button {
+            margin-left: 0;
+        }
+    }
+</style>
+</head>
+<body>
+
+<h2>Manage Weekly Availability</h2>
+
+<div class="form-card">
+    <form id="availabilityForm">
+        <input type="hidden" id="availabilityId" />
+
+        <label>
+            Day:
+            <select id="dayOfWeek">
+                <option>MONDAY</option>
+                <option>TUESDAY</option>
+                <option>WEDNESDAY</option>
+                <option>THURSDAY</option>
+                <option>FRIDAY</option>
+            </select>
+        </label>
+
+        <label>
+            Start Time:
+            <input type="time" id="startTime" required />
+        </label>
+
+        <label>
+            End Time:
+            <input type="time" id="endTime" required />
+        </label>
+
+        <label>
+            Capacity:
+            <input type="number" id="capacity" min="1" required />
+        </label>
+
+        <button type="submit">Save Availability</button>
+    </form>
+</div>
+
+<h3>Existing Availability</h3>
+<div id="availabilityList" class="availability-list"></div>
+
+<script>
+const dayOfWeekEl = document.getElementById("dayOfWeek");
+const startTimeEl = document.getElementById("startTime");
+const endTimeEl   = document.getElementById("endTime");
+const capacityEl  = document.getElementById("capacity");
+const idEl        = document.getElementById("availabilityId");
+const list        = document.getElementById("availabilityList");
+
+// ---------- SAVE / UPDATE ----------
+document.getElementById("availabilityForm").addEventListener("submit", async e => {
+    e.preventDefault();
+
+    if (startTimeEl.value >= endTimeEl.value) {
+        alert("Start time must be before end time");
+        return;
+    }
+
+    const body = {
+        dayOfWeek: dayOfWeekEl.value,
+        startTime: startTimeEl.value,
+        endTime: endTimeEl.value,
+        capacity: Number(capacityEl.value)
+    };
+
+    const id = idEl.value;
+    const url = id
+        ? `http://localhost:8080/api/availability/${id}`
+        : `http://localhost:8080/api/availability`;
+
+    const method = id ? "PUT" : "POST";
+
+    const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+    });
+
+    alert(await res.text());
+    idEl.value = "";
+    loadAvailability();
+});
+
+// ---------- LOAD ----------
+async function loadAvailability() {
+    const res = await fetch("http://localhost:8080/api/availability");
+    const data = await res.json();
+
+    list.innerHTML = "";
+
+    data.forEach(a => {
+        const card = document.createElement("div");
+        card.className = "availability-card";
+
+        const info = document.createElement("div");
+        info.className = "availability-info";
+        info.innerHTML = `
+            <strong>ID:</strong> ${a.id} |
+            <strong>${a.dayOfWeek}</strong> ${a.startTime} - ${a.endTime} 
+            (Capacity: ${a.capacity})
+        `;
+
+        const actions = document.createElement("div");
+        actions.className = "availability-actions";
+        actions.innerHTML = `
+            <button onclick="editAvailability(${a.id}, '${a.dayOfWeek}', '${a.startTime}', '${a.endTime}', ${a.capacity})">Edit</button>
+            <button onclick="viewSlots(${a.id})">View Slots</button>
+        `;
+
+        card.appendChild(info);
+        card.appendChild(actions);
+
+        list.appendChild(card);
+    });
+}
+
+// ---------- EDIT ----------
+function editAvailability(id, day, start, end, cap) {
+    idEl.value = id;
+    dayOfWeekEl.value = day;
+    startTimeEl.value = start;
+    endTimeEl.value = end;
+    capacityEl.value = cap;
+}
+
+// ---------- VIEW SLOTS ----------
+function viewSlots(id) {
+    window.location.href = `/slots?availabilityId=${id}`;
+}
+
+// init
+loadAvailability();
+</script>
+
+</body>
+</html>

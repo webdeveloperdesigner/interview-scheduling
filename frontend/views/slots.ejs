@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Slots</title>
+    <style>
+        /* ===== GLOBAL RESET ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f4f8;
+            color: #1f2937;
+            min-height: 100vh;
+            padding: 0 1rem;
+        }
+
+        a {
+            text-decoration: none;
+            color: #0b5ed7;
+            font-weight: bold;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        h2 {
+            text-align: center;
+            margin: 2rem 0 1rem 0;
+            color: #0b5ed7;
+        }
+
+        /* ===== EMAIL INPUT ===== */
+        .email-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .email-container input {
+            padding: 0.6rem 1rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1rem;
+            width: 250px;
+        }
+
+        /* ===== SLOTS CARDS ===== */
+        .slots-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            max-width: 900px;
+            margin: 0 auto 3rem auto;
+        }
+
+        .date-group h3 {
+            color: #0b5ed7;
+            margin-bottom: 1rem;
+        }
+
+        .slots-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .slot-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            flex: 1 1 200px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .slot-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .slot-card strong {
+            color: #0b5ed7;
+        }
+
+        .slot-card button {
+            margin-top: 1rem;
+            padding: 0.5rem;
+            background-color: #0b5ed7;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .slot-card button:hover {
+            background-color: #084bb5;
+        }
+
+        .slot-full {
+            margin-top: 1rem;
+            color: red;
+            font-weight: bold;
+        }
+
+        @media(max-width: 600px) {
+            .slots-list {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<h2>Interview Slots</h2>
+<div style="text-align: center; margin-bottom: 1rem;">
+    <a href="/availability">← Back to Availability</a>
+</div>
+
+<div class="email-container">
+    <input type="email" id="candidateEmail" placeholder="Enter your email" required>
+</div>
+
+<div id="slots-container" class="slots-container"></div>
+
+<!-- Slots injected from Express -->
+<script id="slots-data" type="application/json">
+    <%- JSON.stringify(slots) %>
+</script>
+
+<script>
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// ✅ Read slots safely
+const slots = JSON.parse(document.getElementById("slots-data").textContent);
+
+// ❌ No slots
+if (!slots || slots.length === 0) {
+    document.getElementById("slots-container").innerHTML =
+        "<p style='text-align:center; color:red; font-weight:bold;'>No slots available.</p>";
+    throw new Error("No slots");
+}
+
+// ✅ Group by date
+const groupedSlots = {};
+slots.forEach(s => {
+    const date = s.startTime.split("T")[0];
+    groupedSlots[date] = groupedSlots[date] || [];
+    groupedSlots[date].push(s);
+});
+
+// ✅ Render slots
+const container = document.getElementById("slots-container");
+
+Object.keys(groupedSlots).sort().forEach(date => {
+    const dateGroup = document.createElement("div");
+    dateGroup.className = "date-group";
+
+    const h3 = document.createElement("h3");
+    h3.textContent = "📅 " + date;
+    dateGroup.appendChild(h3);
+
+    const slotsList = document.createElement("div");
+    slotsList.className = "slots-list";
+
+    groupedSlots[date].forEach(s => {
+        const time = s.startTime.split("T")[1].substring(0,5);
+
+        const card = document.createElement("div");
+        card.className = "slot-card";
+        card.innerHTML = `
+            <div>
+                <strong>Slot ID:</strong> ${s.id}<br/>
+                <strong>Time:</strong> ${time}<br/>
+                <strong>Booked:</strong> ${s.booked} / ${s.capacity}
+            </div>
+        `;
+
+        if (s.booked < s.capacity) {
+            const btn = document.createElement("button");
+            btn.textContent = "Book";
+            btn.dataset.id = s.id;
+            card.appendChild(btn);
+        } else {
+            const full = document.createElement("div");
+            full.className = "slot-full";
+            full.textContent = "Slot Full";
+            card.appendChild(full);
+        }
+
+        slotsList.appendChild(card);
+    });
+
+    dateGroup.appendChild(slotsList);
+    container.appendChild(dateGroup);
+});
+
+// ✅ Booking functionality
+document.addEventListener("click", async e => {
+    if (e.target.tagName !== "BUTTON") return;
+
+    const emailInput = document.getElementById("candidateEmail");
+    const email = emailInput.value.trim();
+
+    if (!email || !emailRegex.test(email)) {
+        alert("Enter a valid email");
+        emailInput.focus();
+        return;
+    }
+
+    const slotId = e.target.dataset.id;
+
+    const res = await fetch(
+        `http://localhost:8080/api/book/${slotId}?email=${encodeURIComponent(email)}`,
+        { method: "POST" }
+    );
+
+    if (res.status === 409) {
+        alert("Already booked or slot full");
+    } else if (res.ok) {
+        alert("Booked successfully");
+        location.reload();
+    } else {
+        alert("Booking failed");
+    }
+});
+</script>
+
+</body>
+</html>

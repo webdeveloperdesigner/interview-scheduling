@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BodhAI Interview Scheduler</title>
+    <style>
+        /* ===== GLOBAL RESET ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f4f8;
+            color: #1f2937;
+            min-height: 100vh;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            background-color: #0b5ed7;
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.3rem;
+        }
+
+        header p {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        .cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 2rem;
+            width: 250px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .card h2 {
+            margin-bottom: 1rem;
+            color: #0b5ed7;
+        }
+
+        .card p {
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .card button {
+            padding: 0.6rem 1.2rem;
+            background-color: #0b5ed7;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .card button:hover {
+            background-color: #084bb5;
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-top: 3rem;
+        }
+
+        @media(max-width: 600px) {
+            .cards {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>BodhAI Interview Scheduler</h1>
+    <p>Manage availability and book interview slots seamlessly</p>
+</header>
+
+<main>
+    <h2>Welcome <%= userName ? userName : "Guest" %>!</h2>
+    <p>Select an option below to get started:</p>
+
+    <div class="cards">
+        <div class="card">
+            <h2>Availability</h2>
+            <p>Add or edit weekly availability for interview slots.</p>
+            <button onclick="location.href='/availability'">Go</button>
+        </div>
+
+        <div class="card">
+            <h2>Slots</h2>
+            <p>View all interview slots and book them.</p>
+            <button onclick="location.href='/slots'">Go</button>
+        </div>
+    </div>
+</main>
+
+<footer>
+    &copy; 2025 BodhAI. All rights reserved.
+</footer>
+
+</body>
+</html>
