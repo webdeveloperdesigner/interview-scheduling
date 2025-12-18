@@ -77,6 +77,7 @@ interview-scheduling/
 │   └── views/
 │       ├── availability.ejs
 │       └── slots.ejs
+|       |__ home.ejs
 │
 ├── database/
 │   └── schema.sql
